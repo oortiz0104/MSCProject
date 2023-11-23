@@ -10,6 +10,7 @@ export interface User {
   name: string
   lastname: string
   role: 1 | 2 | 0
+  suspended: boolean
 }
 
 export interface Actividad {

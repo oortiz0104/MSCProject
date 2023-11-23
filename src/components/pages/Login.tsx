@@ -1,5 +1,4 @@
-import React, { FC, useContext, useState } from 'react'
-import { UilTextFields, UilKeySkeleton } from '@iconscout/react-unicons'
+import { FC, useContext, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import toast from 'react-hot-toast'
@@ -8,6 +7,7 @@ import { FirebaseContext } from '../../firebase/firebase.context'
 import { collection, query, where, limit, getDocs } from 'firebase/firestore'
 import { User } from '../../interfaces'
 import { SessionStoreInstance } from '../../stores'
+import { LockClosedIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 
 export const Login: FC = () => {
   const firebase = useContext(FirebaseContext)
@@ -36,7 +36,7 @@ export const Login: FC = () => {
 
         let queryUser = query(
           collection(firebase.firestore, 'users'),
-          where('username', '==', values.username),
+          where('username', '==', values.username.toUpperCase()),
           limit(1)
         )
 
@@ -58,6 +58,15 @@ export const Login: FC = () => {
             name: doc.data().name,
             lastname: doc.data().lastname,
             role: doc.data().role,
+            suspended: doc.data().suspended,
+          }
+
+          if (user.suspended) {
+            toast.dismiss()
+            toast.error('Tu cuenta ha sido suspendida, contacta al administrador')
+
+            setLoading(false)
+            return
           }
 
           if (user.password !== values.password) {
@@ -104,7 +113,7 @@ export const Login: FC = () => {
       }}
     >
       <form
-        className='bg-white rounded-md shadow-md p-8 sm:w-full lg:w-1/3 flex flex-col'
+        className='p-8 bg-white rounded-md shadow-lg sm:w-full xl:w-1/3 flex flex-col justify-center'
         onSubmit={formik.handleSubmit}
       >
         <h1 className='text-5xl font-Khand font-medium text-slate-900 mb-8'>
@@ -128,8 +137,9 @@ export const Login: FC = () => {
 
           <div className='relative rounded-md shadow-sm w-full'>
             <div className='pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2'>
-              <UilTextFields
-                size='20'
+              <UserCircleIcon
+                className='h-5 w-5 text-gray-400'
+                aria-hidden='true'
                 color='#9CA3AF'
               />
             </div>
@@ -162,8 +172,9 @@ export const Login: FC = () => {
 
           <div className='relative rounded-md shadow-sm w-full'>
             <div className='pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2'>
-              <UilKeySkeleton
-                size='20'
+              <LockClosedIcon
+                className='h-5 w-5 text-gray-400'
+                aria-hidden='true'
                 color='#9CA3AF'
               />
             </div>

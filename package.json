@@ -12,6 +12,8 @@
     "build:css": "postcss src/css/tailwind.css -o src/css/main.css"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
     "@iconscout/react-unicons": "^2.0.2",
     "@tailwindcss/forms": "^0.5.6",
     "autoprefixer": "^10.4.16",

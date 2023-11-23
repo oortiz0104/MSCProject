@@ -5,12 +5,19 @@ import { SessionStoreInstance } from '../../stores'
 interface CustomLinkProps {
   children: React.ReactNode
   to: string
+  onClick?: () => void
 }
 
-const CustomLink: FC<CustomLinkProps> = ({ children, to, ...props }) => {
+const CustomLink: FC<CustomLinkProps> = ({
+  children,
+  to,
+  onClick,
+  ...props
+}) => {
   return (
     <div>
       <NavLink
+        onClick={onClick}
         to={to}
         className={({ isActive }) =>
           [
@@ -57,6 +64,24 @@ export const Sidebar: FC = () => {
             <CustomLink to='/myProfile'>Mi perfil</CustomLink>
           </nav>
         )}
+
+        <hr className='mt-6 border-white opacity-5' />
+
+        <nav
+          className='
+          mt-auto
+        '
+        >
+          <CustomLink
+            to='/'
+            onClick={() => {
+              SessionStoreInstance.signOut()
+              window.location.href = '/'
+            }}
+          >
+            Cerrar sesión
+          </CustomLink>
+        </nav>
       </div>
     </div>
   )
