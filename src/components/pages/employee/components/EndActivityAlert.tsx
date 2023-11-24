@@ -91,12 +91,12 @@ export const EndActivityAlert: FC<ActivityFormProps> = ({
                     <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
                       <Dialog.Title
                         as='h3'
-                        className='text-base font-semibold leading-6 text-gray-900'
+                        className='text-2xl leading-6 font-Khand font-medium text-slate-900'
                       >
                         Actualizar fecha de finalización
                       </Dialog.Title>
                       <div className='mt-2'>
-                        <p className='text-sm text-gray-500'>
+                        <p className='text-sm text-gray-500 font-Poppins'>
                           ¿Estás seguro que deseas actualizar la fecha de
                           finalización de esta actividad?
                         </p>

@@ -108,7 +108,7 @@ export const MyActivities = () => {
               }
 
               const filteredActivities = activitiesCopy.filter((activity) => {
-                const { title, description, employee } = activity
+                const { title, description } = activity
 
                 const searchValue = e.target.value.toLowerCase()
 
