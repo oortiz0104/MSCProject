@@ -4,6 +4,7 @@ import { User } from '../../../interfaces'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { UserForm } from './components/UserForm'
 import { UserCard } from './components/UserCard'
+import { CustomInput } from '../../ui'
 
 export const ManageEmployees = () => {
   const firebase = useContext(FirebaseContext)
@@ -13,6 +14,9 @@ export const ManageEmployees = () => {
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
+
+  const [employeesCopy, setEmployeesCopy] = useState<User[]>([])
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const getEmployees = async () => {
@@ -36,10 +40,11 @@ export const ManageEmployees = () => {
         })
 
         setEmployees(employees)
+        setEmployeesCopy(employees)
         setLoading(false)
       })
     }
-    
+
     getEmployees()
   }, [])
 
@@ -70,6 +75,34 @@ export const ManageEmployees = () => {
         </div>
 
         <hr className='mb-8 border-black opacity-20' />
+
+        <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4'>
+          <CustomInput
+            id='search'
+            name='search'
+            label='Buscar empleado'
+            placeholder='Buscar por nombre, apellido o usuario'
+            type='text'
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+
+              if (e.target.value === '') {
+                setEmployees(employeesCopy)
+                return
+              }
+
+              let filteredEmployees = employeesCopy.filter(
+                (employee) =>
+                  employee.name.includes(e.target.value.toUpperCase()) ||
+                  employee.lastname.includes(e.target.value.toUpperCase()) ||
+                  employee.username.includes(e.target.value.toUpperCase())
+              )
+
+              setEmployees(filteredEmployees)
+            }}
+          />
+        </div>
 
         {employees.length === 0 && loading ? (
           <div className='flex flex-col justify-center items-center'>

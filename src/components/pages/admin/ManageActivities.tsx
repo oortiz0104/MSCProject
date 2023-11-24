@@ -10,6 +10,7 @@ import {
 import { ActivityCard } from './components/ActivityCard'
 import { ActivityForm } from './components/ActivityForm'
 import moment from 'moment'
+import { CustomInput } from '../../ui'
 
 export const ManageActivities = () => {
   const firebase = useContext(FirebaseContext)
@@ -21,6 +22,9 @@ export const ManageActivities = () => {
     null
   )
   const [showActivityForm, setShowActivityForm] = useState(false)
+
+  const [activitiesCopy, setActivitiesCopy] = useState<Activity[]>([])
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const getActivities = async () => {
@@ -52,6 +56,7 @@ export const ManageActivities = () => {
           )
 
           setActivities(activities)
+          setActivitiesCopy(activities)
           setLoading(false)
         }
       )
@@ -87,6 +92,42 @@ export const ManageActivities = () => {
 
         <hr className='mb-8 border-black opacity-20' />
 
+        <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4'>
+          <CustomInput
+            id='search'
+            name='search'
+            label='Buscar actividad'
+            placeholder='Buscar por título, descripción o empleado'
+            type='text'
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+
+              if (e.target.value === '') {
+                setActivities(activitiesCopy)
+                return
+              }
+
+              const filteredActivities = activitiesCopy.filter((activity) => {
+                const { title, description, employee } = activity
+                const { name, lastname, username } = employee
+
+                const searchValue = e.target.value.toUpperCase()
+
+                return (
+                  title.toUpperCase().includes(searchValue) ||
+                  description.toUpperCase().includes(searchValue) ||
+                  name.includes(searchValue) ||
+                  lastname.includes(searchValue) ||
+                  username.includes(searchValue)
+                )
+              })
+
+              setActivities(filteredActivities)
+            }}
+          />
+        </div>
+
         {activities.length === 0 && loading ? (
           <div className='flex flex-col justify-center items-center'>
             <div className='border-gray-300 h-20 w-20 animate-spin rounded-full border-4 border-t-stone-600' />
@@ -99,10 +140,10 @@ export const ManageActivities = () => {
           </div>
         ) : (
           <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10'>
-            {activities.map((employee) => (
+            {activities.map((activity) => (
               <ActivityCard
-                key={employee.id}
-                info={employee}
+                key={activity.id}
+                info={activity}
                 handleEdit={handleEdit}
               />
             ))}

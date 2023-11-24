@@ -67,15 +67,15 @@ export const UserCard: FC<UserCardProps> = ({ info, handleEdit }) => {
         handleEdit(info)
       }}
     >
-      <h2 className='text-2xl font-Khand font-medium text-slate-900 pointer-events-none'>
+      <h2 className='text-2xl font-Khand font-medium text-slate-900 pointer-events-none break-words'>
         {name} {lastname}
       </h2>
 
-      <h3 className='text-xl font-Khand font-medium text-slate-500 pointer-events-none'>
+      <h3 className='text-xl font-Khand font-medium text-slate-500 pointer-events-none break-words'>
         ID: {id}
       </h3>
 
-      <p className='text-slate-500 text-sm font-Poppins pointer-events-none'>
+      <p className='text-slate-500 text-sm font-Poppins pointer-events-none break-words'>
         Usuario: {username}
       </p>
 
@@ -96,8 +96,7 @@ export const UserCard: FC<UserCardProps> = ({ info, handleEdit }) => {
               !suspended
                 ? 'bg-stone-600 hover:bg-stone-700'
                 : 'bg-stone-400 hover:bg-stone-500'
-            }
-    text-white font-Poppins p-3 transition ease-in-out duration-300 rounded-md flex flex-row justify-center items-center w-full`}
+            } text-white font-Poppins p-3 transition ease-in-out duration-300 rounded-md flex flex-row justify-center items-center w-full`}
             onClick={(event) => updateSuspension(!suspended, event)}
             disabled={loading}
           >

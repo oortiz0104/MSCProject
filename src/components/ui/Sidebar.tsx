@@ -1,6 +1,7 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { SessionStoreInstance } from '../../stores'
+import { UserForm } from '../pages/admin/components/UserForm'
 
 interface CustomLinkProps {
   children: React.ReactNode
@@ -38,51 +39,68 @@ const CustomLink: FC<CustomLinkProps> = ({
 export const Sidebar: FC = () => {
   let role = SessionStoreInstance.SessionStore.role
 
+  const [showModalProfileForm, setShowModalProfileForm] = useState(false)
+
   return (
-    <div
-      className='md:w-2/6 xl:w-2/12'
-      style={{
-        backgroundColor: '#1B1B1B',
-      }}
-    >
-      <div className='pt-14 pb-4'>
-        <p className='uppercase text-white text-4xl tracking-wide text-center font-Khand font-medium mb-8 cursor-default'>
-          ACCIONES
-        </p>
+    <>
+      <div
+        className='md:w-2/6 xl:w-2/12'
+        style={{
+          backgroundColor: '#1B1B1B',
+        }}
+      >
+        <div className='pt-14 pb-4'>
+          <p className='uppercase text-white text-4xl tracking-wide text-center font-Khand font-medium mb-8 cursor-default'>
+            ACCIONES
+          </p>
 
-        <hr className='mb-8 border-white opacity-5' />
+          <hr className='mb-8 border-white opacity-5' />
 
-        {role === 1 ? (
-          <nav>
-            <CustomLink to='/staff'>Empleados</CustomLink>
-            <CustomLink to='/administrators'>Administradores</CustomLink>
-            <CustomLink to='/activities'>Actividades</CustomLink>
-          </nav>
-        ) : (
-          <nav>
-            <CustomLink to='/myActivities'>Mis actividades</CustomLink>
-            <CustomLink to='/myProfile'>Mi perfil</CustomLink>
-          </nav>
-        )}
+          {role === 1 ? (
+            <nav>
+              <CustomLink to='/staff'>Empleados</CustomLink>
+              <CustomLink to='/administrators'>Administradores</CustomLink>
+              <CustomLink to='/activities'>Actividades</CustomLink>
+            </nav>
+          ) : (
+            <nav>
+              <CustomLink to='/myActivities'>Mis actividades</CustomLink>
+              <CustomLink
+                to='/'
+                onClick={() => setShowModalProfileForm(true)}
+              >
+                Mi perfil
+              </CustomLink>
+            </nav>
+          )}
 
-        <hr className='mt-6 border-white opacity-5' />
+          <hr className='mt-6 mb-8 border-white opacity-5' />
 
-        <nav
-          className='
+          <nav
+            className='
           mt-auto
         '
-        >
-          <CustomLink
-            to='/'
-            onClick={() => {
-              SessionStoreInstance.signOut()
-              window.location.href = '/'
-            }}
           >
-            Cerrar sesión
-          </CustomLink>
-        </nav>
+            <CustomLink
+              to='/'
+              onClick={() => {
+                SessionStoreInstance.signOut()
+                window.location.href = '/'
+              }}
+            >
+              Cerrar sesión
+            </CustomLink>
+          </nav>
+        </div>
       </div>
-    </div>
+
+      <UserForm
+        open={showModalProfileForm}
+        setOpen={setShowModalProfileForm}
+        selectedUser={SessionStoreInstance.SessionStore}
+        setSelectedUser={() => null}
+        defaultRole={0}
+      />
+    </>
   )
 }

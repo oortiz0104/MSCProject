@@ -10,6 +10,7 @@ import {
   ManageActivities,
   ManageAdministrators,
   ManageEmployees,
+  MyActivities,
 } from './components/pages'
 
 const App = () => {
@@ -60,15 +61,11 @@ const App = () => {
                 <>
                   <Route
                     path='/'
-                    element={<></>}
+                    element={<MyActivities />}
                   />
                   <Route
                     path='/myActivities'
-                    element={<></>}
-                  />
-                  <Route
-                    path='/myProfile'
-                    element={<></>}
+                    element={<MyActivities />}
                   />
                   <Route
                     path='*'

@@ -18,6 +18,7 @@ import {
 import { FirebaseContext } from '../../../../firebase/firebase.context'
 import { delay } from '../../../../utils/misc'
 import { TrashIcon } from '@heroicons/react/24/outline'
+import { SessionStoreInstance } from '../../../../stores'
 
 interface UserFormProps {
   open: boolean
@@ -77,11 +78,21 @@ export const UserForm: FC<UserFormProps> = ({
       try {
         setLoading(true)
 
-        toast.loading(
-          `${selectedUser ? 'Editando' : 'Agregando'} ${
-            defaultRole === 1 ? 'administrador' : 'empleado'
-          }...`
-        )
+        if (defaultRole === 0) {
+          toast.loading(`Editando perfil...`)
+        }
+
+        if (defaultRole === 1) {
+          toast.loading(
+            `${selectedUser ? 'Editando' : 'Agregando'} administrador...`
+          )
+        }
+
+        if (defaultRole === 2) {
+          toast.loading(
+            `${selectedUser ? 'Editando' : 'Agregando'} empleado...`
+          )
+        }
 
         let queryFindUser = query(
           collection(firebase.firestore, 'users'),
@@ -90,7 +101,10 @@ export const UserForm: FC<UserFormProps> = ({
 
         let docs = await getDocs(queryFindUser)
 
-        if (docs.size > 0) {
+        if (
+          docs.size > 0 &&
+          selectedUser?.username !== values.username.toUpperCase().trim()
+        ) {
           toast.dismiss()
           toast.error('El nombre de usuario ya existe, intenta con otro')
 
@@ -111,22 +125,45 @@ export const UserForm: FC<UserFormProps> = ({
             username: values.username.toUpperCase().trim(),
             password: values.password.trim(),
             suspended: false,
-            role: defaultRole,
+            role: defaultRole === 1 ? 1 : 2,
           })
+        }
+
+        if (defaultRole === 0) {
+          SessionStoreInstance.SessionStore = {
+            ...SessionStoreInstance.SessionStore,
+            name: values.name.toUpperCase().trim(),
+            lastname: values.lastname.toUpperCase().trim(),
+          }
         }
 
         await delay(1000)
         toast.dismiss()
-        toast.success(
-          `${defaultRole === 1 ? 'Administrador' : 'Empleado'} ${
-            selectedUser ? 'editado' : 'agregado'
-          } con éxito`
-        )
+
+        if (defaultRole === 0) {
+          toast.success(`Perfil editado con éxito`)
+        }
+
+        if (defaultRole === 1) {
+          toast.success(
+            `Administrador ${selectedUser ? 'editado' : 'agregado'} con éxito`
+          )
+        }
+
+        if (defaultRole === 2) {
+          toast.success(
+            `Empleado ${selectedUser ? 'editado' : 'agregado'} con éxito`
+          )
+        }
 
         setSelectedUser(null)
         setLoading(false)
         setOpen(false)
         formik.resetForm()
+
+        if (defaultRole === 0) {
+          window.location.href = '/'
+        }
       } catch (error) {
         console.log(
           '🚀 ~ file: EmployeeForm.tsx:70 ~ onSubmit: ~ error:',
@@ -226,12 +263,16 @@ export const UserForm: FC<UserFormProps> = ({
                     as='h3'
                     className='text-3xl leading-6 font-Khand font-medium text-slate-900'
                   >
-                    {defaultRole === 1
-                      ? `${selectedUser ? 'Editar' : 'Agregar'} administrador`
-                      : `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
+                    {defaultRole === 0 && 'Editar perfil'}
+
+                    {defaultRole === 1 &&
+                      `${selectedUser ? 'Editar' : 'Agregar'} administrador`}
+
+                    {defaultRole === 2 &&
+                      `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
                   </Dialog.Title>
 
-                  {selectedUser && (
+                  {selectedUser && defaultRole !== 0 && (
                     <>
                       {loading ? (
                         <>
@@ -285,22 +326,26 @@ export const UserForm: FC<UserFormProps> = ({
                     onBlur={formik.handleBlur}
                   />
 
-                  {formik.touched.username && formik.errors.username ? (
-                    <p className='text-red-500 font-Poppins text-sm italic'>
-                      {formik.errors.username}
-                    </p>
-                  ) : null}
-                  <CustomInput
-                    id='username'
-                    name='username'
-                    autoComplete={undefined}
-                    label='Nombre de usuario'
-                    placeholder='Nombre de usuario'
-                    type='text'
-                    value={formik.values.username}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
+                  {defaultRole !== 0 && (
+                    <>
+                      {formik.touched.username && formik.errors.username ? (
+                        <p className='text-red-500 font-Poppins text-sm italic'>
+                          {formik.errors.username}
+                        </p>
+                      ) : null}
+                      <CustomInput
+                        id='username'
+                        name='username'
+                        autoComplete={undefined}
+                        label='Nombre de usuario'
+                        placeholder='Nombre de usuario'
+                        type='text'
+                        value={formik.values.username}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </>
+                  )}
 
                   {!selectedUser && (
                     <>
@@ -332,9 +377,13 @@ export const UserForm: FC<UserFormProps> = ({
                           : 'bg-stone-600 hover:bg-stone-700'
                       } text-white font-Poppins py-4 px-6 transition ease-in-out duration-300 inline-flex justify-center items-center rounded-md w-full sm:w-1/2 mb-2 sm:mb-0 sm:ml-2`}
                     >
-                      {defaultRole === 1
-                        ? `${selectedUser ? 'Editar' : 'Agregar'} administrador`
-                        : `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
+                      {defaultRole === 0 && 'Editar perfil'}
+
+                      {defaultRole === 1 &&
+                        `${selectedUser ? 'Editar' : 'Agregar'} administrador`}
+
+                      {defaultRole === 2 &&
+                        `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
                     </button>
 
                     <button

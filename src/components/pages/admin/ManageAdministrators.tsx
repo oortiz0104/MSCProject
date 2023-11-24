@@ -4,6 +4,7 @@ import { User } from '../../../interfaces'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { UserForm } from './components/UserForm'
 import { UserCard } from './components/UserCard'
+import { CustomInput } from '../../ui'
 
 export const ManageAdministrators = () => {
   const firebase = useContext(FirebaseContext)
@@ -13,6 +14,9 @@ export const ManageAdministrators = () => {
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
+
+  const [administratorsCopy, setAdministratorsCopy] = useState<User[]>([])
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const getEmployees = () => {
@@ -35,6 +39,7 @@ export const ManageAdministrators = () => {
         })
 
         setAdministrators(employees)
+        setAdministratorsCopy(employees)
         setLoading(false)
       })
     }
@@ -69,6 +74,34 @@ export const ManageAdministrators = () => {
         </div>
 
         <hr className='mb-8 border-black opacity-20' />
+
+        <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4'>
+          <CustomInput
+            id='search'
+            name='search'
+            label='Buscar administrador'
+            placeholder='Buscar por nombre, apellido o usuario'
+            type='text'
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+
+              if (e.target.value === '') {
+                setAdministrators(administratorsCopy)
+                return
+              }
+
+              let filteredAdministrators = administratorsCopy.filter(
+                (admin) =>
+                  admin.name.includes(e.target.value.toUpperCase()) ||
+                  admin.lastname.includes(e.target.value.toUpperCase()) ||
+                  admin.username.includes(e.target.value.toUpperCase())
+              )
+
+              setAdministrators(filteredAdministrators)
+            }}
+          />
+        </div>
 
         {administrators.length === 0 && loading ? (
           <div className='flex flex-col justify-center items-center'>
