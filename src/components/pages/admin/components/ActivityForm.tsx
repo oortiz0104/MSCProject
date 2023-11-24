@@ -1,16 +1,16 @@
 import { FC, Fragment, useContext, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { useFormik } from 'formik'
-import { CustomInput } from '../../../ui'
+import { CustomInput, CustomSelect } from '../../../ui'
 import * as Yup from 'yup'
-import { User } from '../../../../interfaces'
+import { Activity, User } from '../../../../interfaces'
 import toast from 'react-hot-toast'
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
-  getDocs,
+  onSnapshot,
   query,
   updateDoc,
   where,
@@ -18,123 +18,92 @@ import {
 import { FirebaseContext } from '../../../../firebase/firebase.context'
 import { delay } from '../../../../utils/misc'
 import { TrashIcon } from '@heroicons/react/24/outline'
+import moment from 'moment'
 
-interface UserFormProps {
+interface ActivityFormProps {
   open: boolean
   setOpen: (value: boolean) => void
-  selectedUser: User | null
-  setSelectedUser: (value: User | null) => void
-  defaultRole: number
+  selectedActivity: Activity | null
+  setSelectedActivity: (value: Activity | null) => void
 }
 
-export const UserForm: FC<UserFormProps> = ({
+export const ActivityForm: FC<ActivityFormProps> = ({
   open,
   setOpen,
-  selectedUser,
-  setSelectedUser,
-  defaultRole,
+  selectedActivity,
+  setSelectedActivity,
 }) => {
   const firebase = useContext(FirebaseContext)
 
   const [loading, setLoading] = useState(false)
+  const [employees, setEmployees] = useState<Record<string, string>>({})
 
   const formik = useFormik({
     initialValues: {
-      username: '',
-      password: '',
-      name: '',
-      lastname: '',
+      title: '',
+      description: '',
+      employee: '',
     },
     validationSchema: Yup.object({
-      name: Yup.string()
-        .required('El nombre es obligatorio')
-        .matches(/^[a-zA-Z\s]+$/, 'El nombre solo puede contener letras')
-        .min(3, 'El nombre debe tener al menos 3 caracteres')
-        .max(50, 'El nombre debe tener menos de 50 caracteres'),
-      lastname: Yup.string()
-        .required('El apellido es obligatorio')
-        .matches(/^[a-zA-Z\s]+$/, 'El apellido solo puede contener letras')
-        .min(3, 'El apellido debe tener al menos 3 caracteres')
-        .max(50, 'El apellido debe tener menos de 50 caracteres'),
-      username: Yup.string()
-        .required('El nombre de usuario es obligatorio')
-        .matches(
-          /^[a-zA-Z0-9]+$/,
-          'El nombre de usuario solo puede contener letras y números'
-        )
-        .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-        .max(50, 'El nombre de usuario debe tener menos de 50 caracteres'),
-      password: Yup.string()
-        .required('La contraseña es obligatoria')
-        .matches(
-          /^[a-zA-Z0-9]+$/,
-          'La contraseña solo puede contener letras y números'
-        )
-        .min(3, 'La contraseña debe tener al menos 3 caracteres')
-        .max(50, 'La contraseña debe tener menos de 50 caracteres'),
+      title: Yup.string()
+        .required('El título es obligatorio')
+        .min(10, 'El título debe tener al menos 10 caracteres')
+        .max(100, 'El título debe tener como máximo 100 caracteres'),
+      description: Yup.string()
+        .required('La descripción es obligatoria')
+        .min(10, 'La descripción debe tener al menos 10 caracteres')
+        .max(100, 'La descripción debe tener como máximo 100 caracteres'),
+      employee: Yup.string().required('El empleado es obligatorio'),
     }),
     onSubmit: async (values) => {
       try {
         setLoading(true)
 
         toast.loading(
-          `${selectedUser ? 'Editando' : 'Agregando'} ${
-            defaultRole === 1 ? 'administrador' : 'empleado'
-          }...`
+          `${selectedActivity ? 'Editando' : 'Agregando'} actividad...`
         )
 
-        let queryFindUser = query(
-          collection(firebase.firestore, 'users'),
-          where('username', '==', values.username.toUpperCase().trim())
-        )
+        let employeeRef = doc(firebase?.firestore, 'users', values.employee)
 
-        let docs = await getDocs(queryFindUser)
-
-        if (docs.size > 0) {
-          toast.dismiss()
-          toast.error('El nombre de usuario ya existe, intenta con otro')
-
-          setLoading(false)
-          return
-        }
-
-        if (selectedUser) {
-          await updateDoc(doc(firebase?.firestore, 'users', selectedUser.id), {
-            name: values.name.toUpperCase().trim(),
-            lastname: values.lastname.toUpperCase().trim(),
-            username: values.username.toUpperCase().trim(),
-          })
+        if (selectedActivity) {
+          await updateDoc(
+            doc(firebase?.firestore, 'activities', selectedActivity.id),
+            {
+              title: values.title.trim(),
+              description: values.description.trim(),
+              employee: employeeRef,
+            }
+          )
         } else {
-          await addDoc(collection(firebase.firestore, 'users'), {
-            name: values.name.toUpperCase().trim(),
-            lastname: values.lastname.toUpperCase().trim(),
-            username: values.username.toUpperCase().trim(),
-            password: values.password.trim(),
-            suspended: false,
-            role: defaultRole,
+          await addDoc(collection(firebase.firestore, 'activities'), {
+            title: values.title.trim(),
+            description: values.description.trim(),
+            creationDate: moment().toISOString(),
+            finalizationDate: null,
+            employee: employeeRef,
           })
         }
 
         await delay(1000)
         toast.dismiss()
         toast.success(
-          `${defaultRole === 1 ? 'Administrador' : 'Empleado'} ${
-            selectedUser ? 'editado' : 'agregado'
-          } con éxito`
+          `Actividad ${selectedActivity ? 'editada' : 'agregada'} con éxito`
         )
 
-        setSelectedUser(null)
+        setSelectedActivity(null)
         setLoading(false)
         setOpen(false)
         formik.resetForm()
       } catch (error) {
         console.log(
-          '🚀 ~ file: EmployeeForm.tsx:70 ~ onSubmit: ~ error:',
+          '🚀 ~ file: ActivityForm.tsx:92 ~ onSubmit: ~ error:',
           error
         )
 
         toast.dismiss()
-        toast.error(`Hubo un error al ${selectedUser ? 'editar' : 'agregar'}`)
+        toast.error(
+          `Hubo un error al ${selectedActivity ? 'editar' : 'agregar'}`
+        )
 
         setLoading(false)
       }
@@ -144,39 +113,65 @@ export const UserForm: FC<UserFormProps> = ({
   useEffect(() => {
     formik.resetForm()
 
-    if (selectedUser) {
+    if (selectedActivity) {
       formik.setValues({
-        name: selectedUser.name,
-        lastname: selectedUser.lastname,
-        username: selectedUser.username,
-        password: selectedUser.password,
+        title: selectedActivity.title,
+        description: selectedActivity.description,
+        employee: selectedActivity.employee.id,
       })
     }
 
     if (!open) {
-      setSelectedUser(null)
+      setSelectedActivity(null)
     }
   }, [open])
 
-  const deleteUser = async () => {
+  useEffect(() => {
+    const getEmployees = async () => {
+      let queryEmployees = query(
+        collection(firebase.firestore, 'users'),
+        where('role', '==', 2)
+      )
+
+      onSnapshot(queryEmployees, (snapshot) => {
+        const employeeRecord: Record<string, string> = {}
+
+        snapshot.forEach((doc) => {
+          let employee = doc.data() as User
+
+          const value = `${employee.name} ${employee.lastname}`
+
+          employeeRecord[doc.id] = value
+        })
+
+        setEmployees(employeeRecord)
+      })
+    }
+    getEmployees()
+  }, [])
+
+  const deleteActivity = async () => {
     try {
       setLoading(true)
-      toast.loading(`Eliminando ${selectedUser?.name}...`)
+      toast.loading(`Eliminando actividad ${selectedActivity?.title}...`)
 
       await deleteDoc(
-        doc(firebase?.firestore, 'users', selectedUser?.id as string)
+        doc(firebase?.firestore, 'activities', selectedActivity?.id as string)
       )
 
       await delay(1000)
       toast.dismiss()
-      toast.success(`${selectedUser?.name} eliminado con éxito`)
+      toast.success(`Actividad ${selectedActivity?.title} eliminada con éxito`)
 
-      setSelectedUser(null)
+      setSelectedActivity(null)
       setLoading(false)
       setOpen(false)
       formik.resetForm()
     } catch (error) {
-      console.log('🚀 ~ file: EmployeeForm.tsx:70 ~ onSubmit: ~ error:', error)
+      console.log(
+        '🚀 ~ file: ActivityForm.tsx:143 ~ deleteUser ~ error:',
+        error
+      )
 
       toast.dismiss()
       toast.error(`Hubo un error al eliminar`)
@@ -226,12 +221,10 @@ export const UserForm: FC<UserFormProps> = ({
                     as='h3'
                     className='text-3xl leading-6 font-Khand font-medium text-slate-900'
                   >
-                    {defaultRole === 1
-                      ? `${selectedUser ? 'Editar' : 'Agregar'} administrador`
-                      : `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
+                    {selectedActivity ? 'Editar' : 'Agregar'} actividad
                   </Dialog.Title>
 
-                  {selectedUser && (
+                  {selectedActivity && (
                     <>
                       {loading ? (
                         <>
@@ -240,7 +233,7 @@ export const UserForm: FC<UserFormProps> = ({
                       ) : (
                         <TrashIcon
                           className='h-6 w-6 text-stone-600 cursor-pointer hover:text-red-400 hover:scale-125 transition ease-in-out duration-300'
-                          onClick={deleteUser}
+                          onClick={deleteActivity}
                         />
                       )}
                     </>
@@ -253,75 +246,53 @@ export const UserForm: FC<UserFormProps> = ({
                   className='w-full flex flex-col'
                   onSubmit={formik.handleSubmit}
                 >
-                  {formik.touched.name && formik.errors.name ? (
+                  {formik.touched.title && formik.errors.title ? (
                     <p className='text-red-500 font-Poppins text-sm italic'>
-                      {formik.errors.name}
+                      {formik.errors.title}
                     </p>
                   ) : null}
                   <CustomInput
-                    id='name'
-                    name='name'
-                    label='Nombre'
-                    placeholder='Nombre del empleado'
+                    id='title'
+                    name='title'
+                    label='Título'
+                    placeholder='Título de la actividad'
                     type='text'
-                    value={formik.values.name}
+                    value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                   />
 
-                  {formik.touched.lastname && formik.errors.lastname ? (
+                  {formik.touched.description && formik.errors.description ? (
                     <p className='text-red-500 font-Poppins text-sm italic'>
-                      {formik.errors.lastname}
+                      {formik.errors.description}
                     </p>
                   ) : null}
                   <CustomInput
-                    id='lastname'
-                    name='lastname'
-                    label='Apellido'
-                    placeholder='Apellido del empleado'
+                    id='description'
+                    name='description'
+                    label='Descripción'
+                    placeholder='Descripción de la actividad'
                     type='text'
-                    value={formik.values.lastname}
+                    value={formik.values.description}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                   />
 
-                  {formik.touched.username && formik.errors.username ? (
+                  {formik.touched.employee && formik.errors.employee ? (
                     <p className='text-red-500 font-Poppins text-sm italic'>
-                      {formik.errors.username}
+                      {formik.errors.employee}
                     </p>
                   ) : null}
-                  <CustomInput
-                    id='username'
-                    name='username'
-                    autoComplete={undefined}
-                    label='Nombre de usuario'
-                    placeholder='Nombre de usuario'
-                    type='text'
-                    value={formik.values.username}
+                  <CustomSelect
+                    id='employee'
+                    name='employee'
+                    label='Empleado'
+                    placeholder='Selecciona un empleado'
+                    value={formik.values.employee}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
+                    data={employees}
                   />
-
-                  {!selectedUser && (
-                    <>
-                      {formik.touched.password && formik.errors.password ? (
-                        <p className='text-red-500 font-Poppins text-sm italic'>
-                          {formik.errors.password}
-                        </p>
-                      ) : null}
-                      <CustomInput
-                        id='npassword'
-                        name='password'
-                        autoComplete={undefined}
-                        label='Contraseña'
-                        placeholder='Contraseña'
-                        type='password'
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    </>
-                  )}
 
                   <div className='sm:flex sm:flex-row-reverse'>
                     <button
@@ -332,9 +303,7 @@ export const UserForm: FC<UserFormProps> = ({
                           : 'bg-stone-600 hover:bg-stone-700'
                       } text-white font-Poppins py-4 px-6 transition ease-in-out duration-300 inline-flex justify-center items-center rounded-md w-full sm:w-1/2 mb-2 sm:mb-0 sm:ml-2`}
                     >
-                      {defaultRole === 1
-                        ? `${selectedUser ? 'Editar' : 'Agregar'} administrador`
-                        : `${selectedUser ? 'Editar' : 'Agregar'} empleado`}
+                      {selectedActivity ? 'Editar' : 'Agregar'} actividad
                     </button>
 
                     <button

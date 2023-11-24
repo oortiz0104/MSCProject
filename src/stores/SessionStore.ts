@@ -12,6 +12,7 @@ class SessionStore {
     name: '',
     lastname: '',
     role: 0,
+    suspended: false,
   }
 
   constructor() {
@@ -39,6 +40,7 @@ class SessionStore {
       name: '',
       lastname: '',
       role: 0,
+      suspended: false,
     }
   }
 }

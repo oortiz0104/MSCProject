@@ -13,13 +13,11 @@ export interface User {
   suspended: boolean
 }
 
-export interface Actividad {
+export interface Activity {
   id: string
   title: string
   description: string
   creationDate: string
   finalizationDate: string | null
-  employeeId: string
+  employee: User
 }
-
-// Otras interfaces para manejar las operaciones pueden ser añadidas según sea necesario

@@ -2,7 +2,6 @@ import { useContext, useEffect, useState } from 'react'
 import { FirebaseContext } from '../../../firebase/firebase.context'
 import { User } from '../../../interfaces'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
-import { delay } from '../../../utils/misc'
 import { UserForm } from './components/UserForm'
 import { UserCard } from './components/UserCard'
 
@@ -16,7 +15,7 @@ export const ManageAdministrators = () => {
   const [showUserForm, setShowUserForm] = useState(false)
 
   useEffect(() => {
-    const getEmployees = async () => {
+    const getEmployees = () => {
       setLoading(true)
 
       let queryEmployees = query(
@@ -36,12 +35,10 @@ export const ManageAdministrators = () => {
         })
 
         setAdministrators(employees)
+        setLoading(false)
       })
-
-      await delay(1000)
-
-      setLoading(false)
     }
+
     getEmployees()
   }, [])
 

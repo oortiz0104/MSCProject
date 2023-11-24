@@ -5,9 +5,12 @@ import { Toaster } from 'react-hot-toast'
 import { FirebaseProvider } from './firebase/firebase.context'
 import { useEffect, useState } from 'react'
 import { SessionStoreInstance } from './stores'
-import { Login } from './components/pages/Login'
-import { ManageEmployees } from './components/pages/admin/ManageEmployees'
-import { ManageAdministrators } from './components/pages/admin/ManageAdministrators'
+import {
+  Login,
+  ManageActivities,
+  ManageAdministrators,
+  ManageEmployees,
+} from './components/pages'
 
 const App = () => {
   const [isLogged, setIsLogged] = useState(false)
@@ -41,7 +44,7 @@ const App = () => {
                   />
                   <Route
                     path='/activities'
-                    element={<></>}
+                    element={<ManageActivities />}
                   />
                   <Route
                     path='*'

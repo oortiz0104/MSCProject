@@ -23,6 +23,7 @@
     "match-sorter": "^6.3.1",
     "mobx": "6.10.2",
     "mobx-persist": "^0.4.1",
+    "moment": "^2.29.4",
     "postcss": "^8.4.31",
     "postcss-cli": "^10.1.0",
     "react": "^18.2.0",
